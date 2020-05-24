@@ -22,11 +22,7 @@ d3.selectAll(".btn-secondary").on("click", optionChanged);
 optionChanged();
 pullDownMenu();
 
-/**
- *
- * @param {var} value. This function creates array of options using the array of values in @param
- */
-
+//Populates the pulldown menu with states
 function pullDownMenu() {
   var dropdown = d3.select("#selState");
   // Log the entire dataset
@@ -54,6 +50,24 @@ function optionChanged() {
   // Reformat dates with moment.js
   startDate = moment(startDate).format("YYYY[-]MM[-]DD");
   endDate = moment(endDate).format("YYYY[-]MM[-]DD");
+
+  //Get unemployment data at the county level
+  baseURL =
+    "https://unemployment-during-covid19.herokuapp.com/countyUnemploymentEstimates";
+  queryString = `?start_date=${startDate}&end_date=${endDate}`;
+
+  getCountyUnemploymentData(startDate, endDate).then(
+    (countyUnemploymentData) => {
+      //Most Recent unemployment data by county
+      mostRecentCountyUnemploymentData = filterMostRecentWeekData(
+        countyUnemploymentData
+      );
+      console.log(
+        "mostRecentCountyUnemploymentData",
+        mostRecentCountyUnemploymentData
+      );
+    }
+  );
 
   //Build Unemployment API call
   baseURL =

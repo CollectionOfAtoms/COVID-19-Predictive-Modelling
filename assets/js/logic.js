@@ -3,10 +3,6 @@ var myMap = L.map("map", {
   center: [39.5, -98.35],
   zoom: 4,
 });
-console.log(
-  "interpolateColors return",
-  interpolateColors("#008000", "#dfed00", 0.1)
-);
 
 addLayers(myMap);
 

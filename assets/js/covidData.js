@@ -1,12 +1,4 @@
-// We have successfully queried the API and can see it in the .get of the d3.json,
-// But we are having difficulty setting the return of getCovidData to a value that is only accessible
-// In the .get itself.
-
-// d3.json was returning an object, not a promise,
-// and the async on getCovidData was throwing a dummy resolved promise in the output to prevent error
-// called the return of getCovidData the query
-// and turned the operation into a promise that resolved to root.data
-
+//Queries the covid API
 function queryCovidAPI(country_code, date) {
   let baseURL = "https://covid-19-statistics.p.rapidapi.com/reports";
   let queryString = `?iso=${country_code}&date=${date}`;
@@ -34,8 +26,6 @@ async function getCovidData(date = null) {
   if (!date) {
     date = yesterday;
   }
-
-  console.log("getCovidData date", date);
 
   console.log("local data", data);
 
@@ -69,5 +59,14 @@ function storeDataLocally(key, value) {
   return localStorage.setItem(key, JSON.stringify(value));
 }
 function getLocalData(key) {
-  return JSON.parse(localStorage.getItem(key));
+  localData = localStorage.getItem(key);
+  // console.log("localData Debug", key, typeof localData, localData);
+
+  //Data always comes back from the cache as a string so we need to check against
+  // string undefined rather thann undefined literal
+  if (localData === "undefined") {
+    return undefined;
+  } else {
+    return JSON.parse(localStorage.getItem(key));
+  }
 }
