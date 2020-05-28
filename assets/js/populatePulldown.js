@@ -1,5 +1,5 @@
 // Set default dates in date fields
-d3.select("#startDate").property("value", "2020-02-01");
+d3.select("#startDate").property("value", "2020-05-01");
 d3.select("#endDate").property("value", moment().format("YYYY[-]MM[-]DD"));
 
 // Bind the optionChanged method to the input fields
@@ -7,7 +7,7 @@ d3.select("#startDate").on("change", optionChanged);
 d3.select("#startDate").on("change", optionChanged);
 
 //Default to initial_claims view
-d3.select("#initial_claims").property("checked", true);
+d3.select("#percent_unemployed").property("checked", true);
 
 //TODO Separate Mode change functionality from optionChanged.
 // option changed should be for filters and trigger new API calls
@@ -51,64 +51,67 @@ function optionChanged() {
   startDate = moment(startDate).format("YYYY[-]MM[-]DD");
   endDate = moment(endDate).format("YYYY[-]MM[-]DD");
 
-  //Get unemployment data at the county level
-  baseURL =
-    "https://unemployment-during-covid19.herokuapp.com/countyUnemploymentEstimates";
-  queryString = `?start_date=${startDate}&end_date=${endDate}`;
+  //Get the value of the selected mode
+  let selectedMode = d3.select('input[name="mode"]:checked').property("id");
+  console.log("currently selected mode", selectedMode);
 
-  getCountyUnemploymentData(startDate, endDate).then(
-    (countyUnemploymentData) => {
-      //Most Recent unemployment data by county
-      mostRecentCountyUnemploymentData = filterMostRecentWeekData(
-        countyUnemploymentData
-      );
-      console.log(
-        "mostRecentCountyUnemploymentData",
-        mostRecentCountyUnemploymentData
-      );
-    }
-  );
+  //If one of the county modes is selected then query the county data from the apis
+  countyModes = ["percent_unemployed", "total_unemployed"];
 
-  //Build Unemployment API call
-  baseURL =
-    "https://unemployment-during-covid19.herokuapp.com/unemploymentData";
-  queryString = `?start_date=${startDate}&end_date=${endDate}`;
+  //Query county data
+  if (countyModes.includes(selectedMode)) {
+    console.log("Querying county data...");
 
-  //If no states are selected, default to returning all state data
-  if (selValues.length > 0) {
-    queryString += `&state_abbr=${selValues.toString()}`;
+    getCountyUnemploymentData(startDate, endDate).then(
+      (countyUnemploymentData) => {
+        //Most Recent unemployment data by county
+        mostRecentCountyUnemploymentData = filterMostRecentWeekData(
+          countyUnemploymentData
+        );
+
+        buildCountyChloropleth(mostRecentCountyUnemploymentData, selectedMode);
+      }
+    );
   }
+  //Query state data
+  else {
+    //Build Unemployment API call
+    baseURL =
+      "https://unemployment-during-covid19.herokuapp.com/unemploymentData";
+    queryString = `?start_date=${startDate}&end_date=${endDate}`;
 
-  // Call out the the Unemployment API with values from the filter fields
-  d3.json(`${baseURL}${queryString}`, (unemploymentData) => {
-    console.log("unemployment API returned", unemploymentData);
+    //If no states are selected, default to returning all state data
+    if (selValues.length > 0) {
+      queryString += `&state_abbr=${selValues.toString()}`;
+    }
 
-    //Generate a line plot
-    buildPlot(unemploymentData);
-    buildPlot1(unemploymentData);
+    // Call out the the Unemployment API with values from the filter fields
+    d3.json(`${baseURL}${queryString}`, (unemploymentData) => {
+      console.log("unemployment API returned", unemploymentData);
 
-    mostRecentUnemploymentData = filterMostRecentWeekData(unemploymentData);
+      //Generate a line plot
+      buildPlot(unemploymentData);
+      buildPlot1(unemploymentData);
 
-    mostRecentUnemploymentDate = moment(
-      mostRecentUnemploymentData[0].file_week_ended
-    ).format("YYYY[-]MM[-]DD");
+      mostRecentUnemploymentData = filterMostRecentWeekData(unemploymentData);
 
-    getCovidData(mostRecentUnemploymentDate).then((covidData) => {
-      console.log("getCovidData return", covidData);
+      mostRecentUnemploymentDate = moment(
+        mostRecentUnemploymentData[0].file_week_ended
+      ).format("YYYY[-]MM[-]DD");
 
-      //Stitch covidData and unemploymentData
-      let allData = stitchData(covidData, unemploymentData);
-      console.log("allData", allData);
+      getCovidData(mostRecentUnemploymentDate).then((covidData) => {
+        console.log("getCovidData return", covidData);
 
-      //Get the value of the selected mode
-      let selectedMode = d3.select('input[name="mode"]:checked').property("id");
-      console.log("currently selected mode", selectedMode);
+        //Stitch covidData and unemploymentData
+        let allData = stitchData(covidData, unemploymentData);
+        console.log("allData", allData);
 
-      //Put a new chloropleth on the map
-      buildChloropleth(allData, selectedMode);
-      populateSummaryStats(unemploymentData);
+        //Put a new chloropleth on the map
+        buildStateChloropleth(allData, selectedMode);
+        populateSummaryStats(unemploymentData);
+      });
     });
-  });
+  }
 }
 
 function changeMode(event) {

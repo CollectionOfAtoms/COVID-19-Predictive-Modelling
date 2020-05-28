@@ -1,5 +1,7 @@
 //Query county unemployment API
 function queryCountyUnemploymentAPI(start_date, end_date, county_FIPS) {
+  console.log(start_date, end_date);
+
   let baseURL =
     "https://unemployment-during-covid19.herokuapp.com/countyUnemploymentEstimates";
 
@@ -12,7 +14,7 @@ function queryCountyUnemploymentAPI(start_date, end_date, county_FIPS) {
     queryString += `end_date=${end_date}&`;
   }
   if (county_FIPS) {
-    queryString += `county_Fips=${county_FIPS}&`;
+    queryString += `county_FIPS=${county_FIPS}&`;
   }
 
   return new Promise((resolve) => {
@@ -23,6 +25,7 @@ function queryCountyUnemploymentAPI(start_date, end_date, county_FIPS) {
   });
 }
 
+//Gets the conty unemployment data from local storage if it exists, otherwise queries the api and writes to storage
 async function getCountyUnemploymentData(
   start_date = "2020-01-01",
   end_date,
@@ -35,24 +38,35 @@ async function getCountyUnemploymentData(
   let countyUnemploymentData = getLocalData("cachedCountyUnemployment");
   console.log("local countyUnemploymentData");
 
-  //If no data is in the query string, then query all of it
+  //If no data is in the query string, then query the selected range and save it to the cache
   if (!countyUnemploymentData || countyUnemploymentData.length == 0) {
-    countyUnemploymentData = await queryCountyUnemploymentAPI();
+    countyUnemploymentData = await queryCountyUnemploymentAPI(
+      start_date,
+      end_date
+    );
     console.log("countyUnemploymentData from API", countyUnemploymentData);
     storeDataLocally("cachedCountyUnemployment", countyUnemploymentData);
   }
-
-  //Filter the data on the front end for faster responsiveness / fewer API calls
-  countyUnemploymentData = countyUnemploymentData
-    .filter((entry) => {
-      entry.file_week_ended > start_date;
-    })
-    .filter((entry) => {
-      entry.file_week_ended < end_date;
-    })
-    .filter((entry) => {
-      county_FIPS.includes(entry.county_FIPS);
+  //We loaded from the cache
+  else {
+    //Sort the data by file_week_ended
+    countyUnemploymentData.sort((a, b) => {
+      if (a.file_week_ended >= b.file_week_ended) {
+        return 1;
+      } else {
+        return -1;
+      }
     });
 
+    console.log(
+      "latest date in chache: ",
+      countyUnemploymentData[0].file_week_ended
+    );
+
+    //TODO: If the earliest date in the cache is > start_date, or the latest date in the cache is < end date
+    //requery the api and use those results
+  }
+
+  console.log("countyUnemploymentData to return", countyUnemploymentData);
   return countyUnemploymentData;
 }

@@ -98,7 +98,7 @@ function addLayers(myMap) {
  * @param {geoJSON OBJECT} geoData The geoJson that is returned from d3.json when querying the geojson file attached
  * @param {*} apiReturn The return from the API
  */
-function zipAPIDataToGeoJSON(geoData, apiReturn, mode) {
+function zipAPIDataToStateGeoJSON(geoData, apiReturn, mode) {
   //Create array of states in the order that the apiReturn came back in
   apiDataStates = apiReturn.map((datum) => datum.state);
 
@@ -119,8 +119,45 @@ function zipAPIDataToGeoJSON(geoData, apiReturn, mode) {
   return geoData;
 }
 
+/**
+ * Takes in geoJson object and appends data returned from the API to each states geoJSON entry
+ * @param {geoJSON OBJECT} geoData The geoJson that is returned from d3.json when querying the geojson file attached
+ * @param {*} apiReturn The return from the API
+ */
+function zipAPIDataToCountyGeoJSON(geoData, apiReturn, mode) {
+  //Create array of states in the order that the apiReturn came back in
+  countyCodes = apiReturn.map((datum) => {
+    let county_code = String(datum.county_code);
+    if (county_code.length < 5) {
+      county_code = "0" + county_code;
+    }
+
+    return county_code;
+  });
+
+  geoData.features.forEach((geoDatum) => {
+    countyFips = geoDatum.properties.STATE + geoDatum.properties.COUNTY;
+
+    // Lookup the corresponding entry from the API's data return with the most recent date that matches this entry by state
+    apiDataIndex = countyCodes.indexOf(countyFips);
+
+    let newProps = {
+      GEO_ID: geoDatum.properties.GEO_ID,
+      CENSUSAREA: geoDatum.properties.CENSUSAREA,
+      ...apiReturn[apiDataIndex],
+    };
+
+    geoDatum.properties = newProps;
+    geoDatum.mode = mode;
+  });
+
+  return geoData;
+}
+
 //Given a value returns a color code
 function getColor(d, mode) {
+  console.log("mode", mode);
+
   options = getColorModeOptions(mode);
 
   for (var ii = 0; ii < options.bins.length; ii++) {
@@ -138,8 +175,6 @@ function getColor(d, mode) {
 
 //Gets the color options for a given mode
 function getColorModeOptions(mode) {
-  console.log("mode", mode);
-
   if (mode == "initial_claims") {
     return {
       highColor: "#008000",
@@ -158,11 +193,36 @@ function getColorModeOptions(mode) {
       lowColor: "#73c2fb",
       bins: [1000000, 700000, 500000, 300000, 100000, 50000, 10000, 1],
     };
-  } else if ((mode = "deaths")) {
+  } else if (mode == "deaths") {
     return {
       highColor: "#301934",
       lowColor: "#b19cd9",
       bins: [3000, 2000, 1000, 500, 100, 50, 30, 10, 1],
+    };
+  } else if (mode == "percent_unemployed") {
+    return {
+      highColor: "#EE0000",
+      lowColor: "#FFFFFF",
+      bins: [60, 50, 40, 30, 20, 10, 5, 0],
+    };
+  } else if (mode == "total_unemployed") {
+    return {
+      highColor: "#EE0000",
+      lowColor: "#FFFFFF",
+      bins: [
+        2000000,
+        1000000,
+        500000,
+        100000,
+        50000,
+        10000,
+        5000,
+        2500,
+        1000,
+        500,
+        100,
+        0,
+      ],
     };
   }
 }
@@ -197,7 +257,8 @@ function addLegend(myMap, mode) {
   legend.addTo(myMap);
 }
 
-function buildChloropleth(apiReturn, mode = "initial_claims") {
+//Generates a chloropleth map layer of states colored by the variable in the mode
+function buildStateChloropleth(apiReturn, mode = "initial_claims") {
   if (geojson) {
     console.log("removing old geojson");
     geojson.remove();
@@ -208,12 +269,62 @@ function buildChloropleth(apiReturn, mode = "initial_claims") {
 
   d3.json(geoDataPath, function (data) {
     apiReturn = filterMostRecentWeekData(apiReturn);
-    data = zipAPIDataToGeoJSON(data, apiReturn, mode);
+    data = zipAPIDataToStateGeoJSON(data, apiReturn, mode);
 
     function style(feature) {
       return {
         fillColor: getColor(feature.properties[mode], feature.mode),
         weight: 2,
+        opacity: 1,
+        color: "black",
+        fillOpacity: 0.7,
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      layer.bindPopup(
+        `${feature.properties.state}
+        <br/>File Week Ended: ${moment(
+          feature.properties.file_week_ended
+        ).format("MMMM Do YYYY")}
+          <br/>New Unemployment Claims: ${feature.properties.initial_claims}
+          <br/>Continued Claims: ${feature.properties.continued_claims}
+          <br/>Unemployment Rate: ${
+            feature.properties.insured_unemployment_rate
+          }
+          `
+      );
+    }
+
+    geojson = L.geoJson(data, {
+      style: style,
+      onEachFeature: onEachFeature,
+    }).addTo(myMap);
+  });
+
+  addLegend(myMap, mode);
+}
+
+//Generates a chloropleth map layer of counties colored by the variable in the mode
+function buildCountyChloropleth(apiReturn, mode = "initial_claims") {
+  if (geojson) {
+    console.log("removing old geojson");
+    geojson.remove();
+  }
+
+  // Load in geojson data
+  var geoDataPath = "assets/data/geojson-counties-fips.json";
+
+  d3.json(geoDataPath, function (data) {
+    apiReturn = filterMostRecentWeekData(apiReturn);
+    data = zipAPIDataToCountyGeoJSON(data, apiReturn, mode);
+
+    console.log("county_data", data);
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties[mode], feature.mode),
+        weight: 1,
         opacity: 1,
         color: "black",
         fillOpacity: 0.7,
