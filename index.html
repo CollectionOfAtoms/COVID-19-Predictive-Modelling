@@ -209,6 +209,24 @@
                 />
                 County Total Unemployed
               </label>
+              <label class="btn btn-secondary">
+                <input
+                  type="radio"
+                  name="mode"
+                  id="county_confirmed"
+                  class="mode-btn"
+                />
+                County Covid Cases
+              </label>
+              <label class="btn btn-secondary">
+                <input
+                  type="radio"
+                  name="mode"
+                  id="county_deaths"
+                  class="mode-btn"
+                />
+                County Covid Deaths
+              </label>
             </div>
           </div>
         </div>
@@ -220,7 +238,9 @@
             <div class="panel-heading">
               <h3 class="panel-title">Summary Statistics</h3>
             </div>
-            <div class="panel-body" id="summaryStats"></div>
+            <div class="panel-body" id="unempStats"></div>
+            <hr />
+            <div class="panel-body" id="covidStats"></div>
           </div>
           <div class="panel-footer" align="center">
             <a href="table.html">Data Table</a>

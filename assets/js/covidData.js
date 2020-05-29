@@ -17,6 +17,7 @@ function queryCovidAPI(country_code, date) {
 /** Queries the CovidAPI to get data for a specific date.
  * if none is provided, then it defaults to yesterday
  */
+// placing assignment "=" on an argument within func def means that arg defaults to supplied value if no arg is provided in fn call
 async function getCovidData(date = null) {
   console.log("getCovidData date", date);
 
@@ -55,18 +56,14 @@ async function getCovidData(date = null) {
   return data;
 }
 
+// step 1 -- new fn that checks a place in cache for county covid data, if exists, and if not query API and store
+// try to store full county return in cache, if that's a prob:
+//  query for only most recent day, that might be small enough to fit in cache
+//
+
 function storeDataLocally(key, value) {
   return localStorage.setItem(key, JSON.stringify(value));
 }
 function getLocalData(key) {
-  localData = localStorage.getItem(key);
-  // console.log("localData Debug", key, typeof localData, localData);
-
-  //Data always comes back from the cache as a string so we need to check against
-  // string undefined rather thann undefined literal
-  if (localData === "undefined") {
-    return undefined;
-  } else {
-    return JSON.parse(localStorage.getItem(key));
-  }
+  return JSON.parse(localStorage.getItem(key));
 }

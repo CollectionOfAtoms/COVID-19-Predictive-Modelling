@@ -16,21 +16,27 @@ https://oui.doleta.gov/unemploy/claims.asp
 
 #### Shaun
 
-- [ ] Data exploration and beginning stages of jupyter notebook creation for neural net machine learning model development.
+- [ ] Updating existing plots on home page to display county data, adding additional plots displaying covid cases, potentially toggling back and forth.
 
 #### Rose
 
-- [ ] Will write an instance of the most recent COVID data from an API call to a CSV. This will be distributed to teammates so they may all develop candidate neural nets with different parameters. Other variables for their modelling will come from an unemployment dataset (as CSV) and the CDC's social vulnerability index data. They'll do their model building in parallel, and on Monday we will compare effectiveness.
-- [ ] Will take my previously deployed Unemployment API from Heroku and add an additional route with a new unemployment dataset. The new dataset has more updated figures from a different source, and its data is resolved down to the county level, rather than just the state level.
+- [x] Write an instance of the most recent COVID data from an API call to a CSV. Distributed to teammates so they may all develop candidate neural nets with different parameters.
+- [x] Will take my previously deployed Unemployment API from Heroku and add an additional route with a new unemployment dataset. The new dataset has more updated figures from a different source, and its data is resolved down to the county level, rather than just the state level.
 - [x] Will clean up and fork my previous Project 2 repo so the only contributors to this final project are the four of us, and those updates will not erase or overwrite my Project 2 teammates' work.
+- [x] Add new data from AGS county unemployment dataset to our master database -- drop old table and re-add with new estimates.
+- [x] Expand the summary statistics panel to include covid case info.
+- [ ] Add covid data to the state popups
+- [x] Enable the switching of map layers to toggle between state and county geojson files depending on dataset.
+- [ ] Add API route that's connected to a NN file, query params would be NN input vars?
 
 #### Alec
 
-- [ ] Data exploration and beginning stages of jupyter notebook creation for neural net machine learning model development.
+- [ ] Creating an additional sources page.
 
 #### Ryan
 
-- [ ] Data exploration and beginning stages of jupyter notebook creation for neural net machine learning model development.
+- [ ] Continue fine-tuning the NN to predict % of county populations with COVID 30 days after lockdown.
+- [ ] Update a general regression analysis and perhaps create more specific additional regression analyses for additional site table.
 
 #### Unassigned
 

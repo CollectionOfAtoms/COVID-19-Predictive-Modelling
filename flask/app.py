@@ -31,7 +31,7 @@ def welcome():
     start_menu = """<br>
                 Explore our US unemployment data API! 
                 <br><br><br>
-                Follow route "/unemploymentData" for all US Department of Labor unemployment data from Jan 2019 through April 2020
+                Follow route "/unemploymentData" for all US Department of Labor unemployment data from Jan 2019 through May 2020
                 <br><br>
                 Add optional start and end date parameters by inputing dates in the form of:
                 <br>
@@ -168,6 +168,7 @@ def countyUnemploymentData():
         })
 
     return jsonify(data)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

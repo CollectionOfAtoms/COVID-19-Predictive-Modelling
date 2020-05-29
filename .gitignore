@@ -3,3 +3,5 @@ assets/.DS_Store
 assets/data/.DS_Store
 assets/data/AGS_data/.DS_Store
 assets/data/.DS_Store
+assets/data/.ipynb_checkpoints/ParseAGS-checkpoint.ipynb
+assets/data/.ipynb_checkpoints/SQLite_data_addition-checkpoint.ipynb

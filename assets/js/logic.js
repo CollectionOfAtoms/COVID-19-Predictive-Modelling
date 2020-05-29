@@ -6,8 +6,9 @@ var myMap = L.map("map", {
 
 addLayers(myMap);
 
-// global to hold the choropleth layer and legend, so we can remove it
-var geojson;
+// global to hold the choropleth layers and legend, so we can remove it
+var stateGeojson;
+var countyGeojson;
 var legend = null;
 
 /** Takes two color codes as strings and returns you a color code that is a proportion between them
@@ -156,8 +157,6 @@ function zipAPIDataToCountyGeoJSON(geoData, apiReturn, mode) {
 
 //Given a value returns a color code
 function getColor(d, mode) {
-  console.log("mode", mode);
-
   options = getColorModeOptions(mode);
 
   for (var ii = 0; ii < options.bins.length; ii++) {
@@ -224,6 +223,18 @@ function getColorModeOptions(mode) {
         0,
       ],
     };
+  } else if (mode == "county_confirmed") {
+    return {
+      highColor: "#1F3D0C",
+      lowColor: "#ffffff",
+      bins: [10000, 5000, 2500, 1000, 500, 250, 100, 50, 30, 10, 0],
+    };
+  } else if (mode == "county_deaths") {
+    return {
+      highColor: "#1F3D0C",
+      lowColor: "#ffffff",
+      bins: [5000, 2500, 1000, 500, 250, 100, 75, 50, 30, 20, 10, 5, 1, 0],
+    };
   }
 }
 
@@ -257,12 +268,17 @@ function addLegend(myMap, mode) {
   legend.addTo(myMap);
 }
 
+// this function is necessary to control for variances in loading speed between county and state geojson layers
+//  both must be searched for and deleted at the time of a mode switch
+//  to ensure that the on-page-load county layer doesn't repopulate the map before a potential incoming state layer.
+function removeAllGeojson() {
+  stateGeojson && stateGeojson.remove();
+  countyGeojson && countyGeojson.remove();
+}
+
 //Generates a chloropleth map layer of states colored by the variable in the mode
 function buildStateChloropleth(apiReturn, mode = "initial_claims") {
-  if (geojson) {
-    console.log("removing old geojson");
-    geojson.remove();
-  }
+  removeAllGeojson();
 
   // Load in geojson data
   var geoDataPath = "assets/data/US.geojson";
@@ -296,7 +312,54 @@ function buildStateChloropleth(apiReturn, mode = "initial_claims") {
       );
     }
 
-    geojson = L.geoJson(data, {
+    stateGeojson = L.geoJson(data, {
+      style: style,
+      onEachFeature: onEachFeature,
+    }).addTo(myMap);
+  });
+
+  addLegend(myMap, mode);
+}
+
+//Generates a chloropleth map layer of counties colored by the variable in the mode
+function buildCountyChloropleth(apiReturn, mode = "initial_claims") {
+  removeAllGeojson();
+
+  // Load in geojson data
+  var geoDataPath = "assets/data/geojson-counties-fips.json";
+
+  d3.json(geoDataPath, function (data) {
+    apiReturn = filterMostRecentWeekData(apiReturn);
+    data = zipAPIDataToCountyGeoJSON(data, apiReturn, mode);
+
+    console.log("county_data", data);
+
+    function style(feature) {
+      return {
+        fillColor: getColor(feature.properties[mode], feature.mode),
+        weight: 1,
+        opacity: 1,
+        color: "black",
+        fillOpacity: 0.7,
+      };
+    }
+
+    function onEachFeature(feature, layer) {
+      layer.bindPopup(
+        `${feature.properties.state}
+        <br/>File Week Ended: ${moment(
+          feature.properties.file_week_ended
+        ).format("MMMM Do YYYY")}
+          <br/>New Unemployment Claims: ${feature.properties.initial_claims}
+          <br/>Continued Claims: ${feature.properties.continued_claims}
+          <br/>Unemployment Rate: ${
+            feature.properties.insured_unemployment_rate
+          }
+          `
+      );
+    }
+
+    countyGeojson = L.geoJson(data, {
       style: style,
       onEachFeature: onEachFeature,
     }).addTo(myMap);
