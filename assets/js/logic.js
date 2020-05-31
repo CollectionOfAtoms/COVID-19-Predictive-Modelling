@@ -160,11 +160,11 @@ function getColor(d, mode) {
   options = getColorModeOptions(mode);
 
   for (var ii = 0; ii < options.bins.length; ii++) {
-    if (d > options.bins[ii]) {
+    if (d >= options.bins[ii]) {
       return interpolateColors(
         options.highColor,
         options.lowColor,
-        ii / (options.bins.length - 1)
+        parseFloat(ii) / (options.bins.length - 1)
       );
     }
   }
@@ -178,25 +178,25 @@ function getColorModeOptions(mode) {
     return {
       highColor: "#008000",
       lowColor: "#ffff00",
-      bins: [100000, 50000, 20000, 10000, 5000, 2000, 1000, 1],
+      bins: [100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 100],
     };
   } else if (mode == "confirmed") {
     return {
       highColor: "#e9294a",
       lowColor: "#f6a5b3",
-      bins: [100000, 50000, 20000, 10000, 5000, 2000, 1000, 1],
+      bins: [100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 100],
     };
   } else if (mode == "continued_claims") {
     return {
       highColor: "#000080",
       lowColor: "#73c2fb",
-      bins: [1000000, 700000, 500000, 300000, 100000, 50000, 10000, 1],
+      bins: [1000000, 700000, 500000, 300000, 100000, 50000, 10000, 0],
     };
   } else if (mode == "deaths") {
     return {
       highColor: "#301934",
       lowColor: "#b19cd9",
-      bins: [3000, 2000, 1000, 500, 100, 50, 30, 10, 1],
+      bins: [3000, 2000, 1000, 500, 100, 50, 30, 10, 2, 0],
     };
   } else if (mode == "percent_unemployed") {
     return {
@@ -227,13 +227,13 @@ function getColorModeOptions(mode) {
     return {
       highColor: "#1F3D0C",
       lowColor: "#ffffff",
-      bins: [10000, 5000, 2500, 1000, 500, 250, 100, 50, 30, 10, 0],
+      bins: [10000, 5000, 2500, 1000, 500, 250, 100, 50, 30, 10, 2, 0],
     };
   } else if (mode == "county_deaths") {
     return {
       highColor: "#1F3D0C",
       lowColor: "#ffffff",
-      bins: [5000, 2500, 1000, 500, 250, 100, 75, 50, 30, 20, 10, 5, 1, 0],
+      bins: [5000, 2500, 1000, 500, 250, 100, 75, 50, 30, 20, 10, 5, 2, 0],
     };
   }
 }
@@ -253,13 +253,15 @@ function addLegend(myMap, mode) {
     div.innerHTML += '<i style="background:' + "black" + '"></i> No Data <br>';
 
     // loop through our density intervals and generate a label with a colored square for each interval
-    for (let i = 1; i < grades.length; i++) {
+    for (let i = 0; i < grades.length; i++) {
       div.innerHTML +=
         '<i style="background:' +
-        getColor(grades[i] + 1, mode) +
+        getColor(grades[i], mode) +
         '"></i> ' +
         grades[i] +
-        (grades[i + 1] ? "&ndash;" + grades[i + 1] + "<br>" : "+");
+        (grades[i + 1]
+          ? "&ndash;" + (parseFloat(grades[i + 1]) - 1) + "<br>"
+          : "+");
     }
 
     return div;

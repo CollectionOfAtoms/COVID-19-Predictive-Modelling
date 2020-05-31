@@ -4,15 +4,10 @@ d3.select("#endDate").property("value", moment().format("YYYY[-]MM[-]DD"));
 
 // Bind the optionChanged method to the input fields
 d3.select("#startDate").on("change", optionChanged);
+d3.select("#endDate").on("change", optionChanged);
 
 //Default to percent_unemployed view
 d3.select("#percent_unemployed").property("checked", true);
-
-//TODO Separate Mode change functionality from optionChanged.
-// option changed should be for filters and trigger new API calls
-// modeChanged should just change the data being displayed without making
-// a new API call
-// d3.selectAll(".btn-secondary").on("click", changeMode);
 
 //For now just hook up the mode changing buttons to optionChanged
 d3.selectAll(".mode-btn").on("click", optionChanged);
