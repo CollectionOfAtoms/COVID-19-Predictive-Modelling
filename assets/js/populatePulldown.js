@@ -77,6 +77,9 @@ function optionChanged() {
           mostRecentCountyUnemploymentData[0].file_week_ended
         ).format("YYYY[-]MM[-]DD");
 
+        //Display the date the map refelcts
+        addMapDetails(mostRecentCountyUnemploymentDate);
+
         getCovidData(mostRecentCountyUnemploymentDate).then((covidData) => {
           console.log(
             "county covid return",
@@ -130,6 +133,9 @@ function optionChanged() {
       mostRecentUnemploymentDate = moment(
         mostRecentUnemploymentData[0].file_week_ended
       ).format("YYYY[-]MM[-]DD");
+
+      //Display the date
+      addMapDetails(mostRecentCountyUnemploymentDate);
 
       getCovidData(mostRecentUnemploymentDate).then((covidData) => {
         console.log("getCovidData return", covidData);
@@ -207,4 +213,9 @@ function stitchCountyData(covidData, countyUnemploymentData) {
   return returnArray;
 }
 
-// map layer issue!
+//Displays the date the map is showing
+function addMapDetails(date) {
+  map_deets = d3.select("#map-details");
+  map_deets.text(""); //Clear existing
+  map_deets.append("p").text(`Displaying data for ${date}`);
+}
