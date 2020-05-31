@@ -31,6 +31,7 @@ function buildTable(data) {
       .append("td")
       .attr("class", "tableDatum")
       .text(datum.insured_unemployment_rate);
+    row.append("td").attr("class", "tableDatum").text(datum.file_week_ended);
 
     // Object.entries(data).forEach(([key, value]) => {
     //   var cell = row.append("td");

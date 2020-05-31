@@ -39,8 +39,7 @@ function pullDownMenu() {
  * When the select dropdown or one of the date filters is changed this function will fire
  */
 function optionChanged() {
-  var selValues = [];
-  selValues.push($("#selState").val());
+  selValues = $("#selState").val();
   // d3.select("#h-pulldown").text(selValues);
 
   let startDate = d3.select("#startDate").property("value");
@@ -89,8 +88,19 @@ function optionChanged() {
             covidData,
             mostRecentCountyUnemploymentData
           );
+
+          // filters out unselected states, if at least one state is selected
+          if (selValues.length > 0) {
+            console.log("filtering states...", selValues);
+            allCountyData = allCountyData.filter((countyDatum) => {
+              return selValues.includes(stateLookup[countyDatum.state]);
+            });
+          }
+
           console.log("allCountyData", allCountyData);
+
           buildCountyChloropleth(allCountyData, selectedMode);
+          populateCountySummaryStats(allCountyData);
         });
       }
     );
@@ -130,7 +140,7 @@ function optionChanged() {
 
         //Put a new chloropleth on the map
         buildStateChloropleth(allData, selectedMode);
-        populateSummaryStats(allData);
+        populateStateSummaryStats(allData);
       });
     });
   }
@@ -183,6 +193,7 @@ function stitchCountyData(covidData, countyUnemploymentData) {
             ...countyUnemploymentDatum,
             county_deaths: countyCovidDatum.deaths,
             county_confirmed: countyCovidDatum.confirmed,
+            state: covidDatum.region.province,
           };
           returnArray.push(returnDatum);
           matchedCounty = true;

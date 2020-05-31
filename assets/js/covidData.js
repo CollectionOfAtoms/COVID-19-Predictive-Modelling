@@ -1,4 +1,9 @@
-//Queries the covid API
+// d3.json was returning an object, not a promise,
+// and the async on getCovidData was throwing a dummy resolved promise in the output to prevent error
+
+// called the return of getCovidData the query
+// and turned the operation into a promise that resolved to root.data
+
 function queryCovidAPI(country_code, date) {
   let baseURL = "https://covid-19-statistics.p.rapidapi.com/reports";
   let queryString = `?iso=${country_code}&date=${date}`;
@@ -55,11 +60,6 @@ async function getCovidData(date = null) {
 
   return data;
 }
-
-// step 1 -- new fn that checks a place in cache for county covid data, if exists, and if not query API and store
-// try to store full county return in cache, if that's a prob:
-//  query for only most recent day, that might be small enough to fit in cache
-//
 
 function storeDataLocally(key, value) {
   return localStorage.setItem(key, JSON.stringify(value));
