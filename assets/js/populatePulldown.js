@@ -15,7 +15,7 @@ d3.select("#percent_unemployed").property("checked", true);
 // d3.selectAll(".btn-secondary").on("click", changeMode);
 
 //For now just hook up the mode changing buttons to optionChanged
-d3.selectAll(".btn-secondary").on("click", optionChanged);
+d3.selectAll(".mode-btn").on("click", optionChanged);
 
 //Initial API call on page load
 optionChanged();
