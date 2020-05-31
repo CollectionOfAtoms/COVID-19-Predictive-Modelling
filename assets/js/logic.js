@@ -184,13 +184,29 @@ function getColorModeOptions(mode) {
     return {
       highColor: "#e9294a",
       lowColor: "#f6a5b3",
-      bins: [100000, 50000, 20000, 10000, 5000, 2000, 1000, 500, 100],
+      bins: [100000, 50000, 20000, 10000, 5000, 2000, 1000, 0],
     };
   } else if (mode == "continued_claims") {
     return {
       highColor: "#000080",
       lowColor: "#73c2fb",
       bins: [1000000, 700000, 500000, 300000, 100000, 50000, 10000, 0],
+    };
+  } else if (mode == "covid-unemployment-residual") {
+    return {
+      highColor: "#00DD00",
+      lowColor: "#DD0000",
+      bins: [
+        "0.20",
+        "0.15",
+        "0.10",
+        "0.05",
+        "0.00",
+        "-0.05",
+        "-0.10",
+        "-0.15",
+        "-0.20",
+      ],
     };
   } else if (mode == "deaths") {
     return {
@@ -202,7 +218,7 @@ function getColorModeOptions(mode) {
     return {
       highColor: "#EE0000",
       lowColor: "#FFFFFF",
-      bins: [60, 50, 40, 30, 20, 10, 5, 0],
+      bins: [60, 50, 40, 30, 20, 10, 5, 2, 0],
     };
   } else if (mode == "total_unemployed") {
     return {
@@ -254,20 +270,53 @@ function addLegend(myMap, mode) {
 
     // loop through our density intervals and generate a label with a colored square for each interval
     for (let i = 0; i < grades.length; i++) {
-      div.innerHTML +=
-        '<i style="background:' +
-        getColor(grades[i], mode) +
-        '"></i> ' +
-        grades[i] +
-        (grades[i + 1]
-          ? "&ndash;" + (parseFloat(grades[i + 1]) - 1) + "<br>"
-          : "+");
+      div.innerHTML += makeLegendLabel(grades, mode, i);
     }
 
     return div;
   };
 
   legend.addTo(myMap);
+}
+
+//Makes the legend html for the ith grade in grades with colors determined by the mode
+//Creates legend labels conditionally on whether you have ints or floats in bins
+function makeLegendLabel(grades, mode, i) {
+  return (
+    '<i style="background:' +
+    getColor(parseFloat(grades[i]), mode) +
+    '"></i> ' +
+    grades[i] +
+    (grades.hasOwnProperty(i + 1)
+      ? "&ndash;" + decrementNum(grades[i + 1]) + "<br>"
+      : "+")
+  );
+}
+
+/**
+ * Returns the number reduced by one of its smallest digit
+ * @param {*} num
+ */
+function decrementNum(num) {
+  num_string = num.toString();
+  num = parseFloat(num);
+  dot = num_string.indexOf(".");
+
+  if (dot == -1) {
+    return num - 1;
+  } else {
+    //Get the number of digits between the . and the last digit
+    // 1.013 dot = 1 length = 5 we want 3
+    let last_place = num_string.length - dot - 2;
+
+    let decrement_by = ".";
+    for (var ii = 0; ii < last_place; ii++) {
+      decrement_by += "0";
+    }
+    decrement_by += "1";
+
+    return (num - parseFloat(decrement_by)).toFixed(last_place + 1);
+  }
 }
 
 // this function is necessary to control for variances in loading speed between county and state geojson layers

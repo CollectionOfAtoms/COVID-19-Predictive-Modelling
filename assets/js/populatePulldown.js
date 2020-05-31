@@ -7,7 +7,7 @@ d3.select("#startDate").on("change", optionChanged);
 d3.select("#endDate").on("change", optionChanged);
 
 //Default to percent_unemployed view
-d3.select("#percent_unemployed").property("checked", true);
+d3.select("#covid-unemployment-residual").property("checked", true);
 
 //For now just hook up the mode changing buttons to optionChanged
 d3.selectAll(".mode-btn").on("click", optionChanged);
@@ -95,6 +95,9 @@ function optionChanged() {
             });
           }
 
+          // This is currenly coming back NAN, but works for the state side
+          // needs tweaking
+          // allCountyData = calcCovidUnemploymentResidual(allCountyData);
           console.log("allCountyData", allCountyData);
 
           buildCountyChloropleth(allCountyData, selectedMode);
@@ -130,13 +133,14 @@ function optionChanged() {
       ).format("YYYY[-]MM[-]DD");
 
       //Display the date
-      addMapDetails(mostRecentCountyUnemploymentDate);
+      addMapDetails(mostRecentUnemploymentDate);
 
       getCovidData(mostRecentUnemploymentDate).then((covidData) => {
         console.log("getCovidData return", covidData);
 
         //Stitch covidData and unemploymentData
         let allData = stitchData(covidData, unemploymentData);
+        allData = calcCovidUnemploymentResidual(allData);
         console.log("allData", allData);
 
         //Put a new chloropleth on the map
@@ -145,10 +149,6 @@ function optionChanged() {
       });
     });
   }
-}
-
-function changeMode(event) {
-  console.log("event", event);
 }
 
 //Take two arrays of objects with state and date data, and return one array of objects with all data from each.
@@ -213,4 +213,42 @@ function addMapDetails(date) {
   map_deets = d3.select("#map-details");
   map_deets.text(""); //Clear existing
   map_deets.append("p").text(`Displaying data for ${date}`);
+}
+
+/**
+ * Covid Unemployment Residual is defined to be:
+ * The difference between
+ * (covid cases within a region / # of unemployment claims within a region)
+ * and
+ * (covid-cases within the entire provided set / # of unemployment claims within the entire set)
+ */
+function calcCovidUnemploymentResidual(data) {
+  //If it has a total_unemployed column, use that, otherwise use the continued claims
+  let unemployment_key;
+  if (data.hasOwnProperty("total_unemployed")) {
+    unemployment_key = "total_unemployed";
+  } else unemployment_key = "continued_claims";
+
+  //Filter out any data that doesn't have both covid && unemployment data
+  data = data.filter((datum) => {
+    return datum.hasOwnProperty("confirmed");
+  });
+
+  //Get total covid cases and unemployment for the set
+  total = data.reduce((prev, curr) => {
+    return {
+      confirmed: prev.confirmed + curr.confirmed,
+      [unemployment_key]: prev[unemployment_key] + curr[unemployment_key],
+    };
+  });
+
+  total_cov_per_unemployment = total.confirmed / total[unemployment_key];
+
+  //Loop through each point and append residual
+  data.forEach((datum) => {
+    datum["covid-unemployment-residual"] =
+      datum.confirmed / datum[unemployment_key] - total_cov_per_unemployment;
+  });
+
+  return data;
 }
