@@ -167,7 +167,6 @@ function getColor(d, mode) {
       if (d >= currentBin) {
         //If the bin is < halfway through the array
         if (ii <= options.bins.length / 2) {
-          console.log("hit the if", d, currentBin, ii, options.bins.length / 2);
           return interpolateColors(
             options.highColor,
             options.midColor,
@@ -177,14 +176,6 @@ function getColor(d, mode) {
           let proportion =
             (options.bins.length - 1 - parseFloat(ii)) /
             (options.bins.length / 2);
-          console.log(
-            "hit the else",
-            d,
-            currentBin,
-            ii,
-            options.bins.length / 2,
-            proportion
-          );
           return interpolateColors(
             options.lowColor,
             options.midColor,
