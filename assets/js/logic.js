@@ -157,15 +157,53 @@ function zipAPIDataToCountyGeoJSON(geoData, apiReturn, mode) {
 
 //Given a value returns a color code
 function getColor(d, mode) {
+  d = parseFloat(d);
   options = getColorModeOptions(mode);
 
-  for (var ii = 0; ii < options.bins.length; ii++) {
-    if (d >= options.bins[ii]) {
-      return interpolateColors(
-        options.highColor,
-        options.lowColor,
-        parseFloat(ii) / (options.bins.length - 1)
-      );
+  //If there is a midColor make a 3 color gradient
+  if (options.hasOwnProperty("midColor")) {
+    for (var ii = 0; ii < options.bins.length; ii++) {
+      currentBin = parseFloat(options.bins[ii]);
+      if (d >= currentBin) {
+        //If the bin is < halfway through the array
+        if (ii <= options.bins.length / 2) {
+          console.log("hit the if", d, currentBin, ii, options.bins.length / 2);
+          return interpolateColors(
+            options.highColor,
+            options.midColor,
+            parseFloat(ii) / (options.bins.length / 2)
+          );
+        } else {
+          let proportion =
+            (options.bins.length - 1 - parseFloat(ii)) /
+            (options.bins.length / 2);
+          console.log(
+            "hit the else",
+            d,
+            currentBin,
+            ii,
+            options.bins.length / 2,
+            proportion
+          );
+          return interpolateColors(
+            options.lowColor,
+            options.midColor,
+            proportion
+          );
+        }
+      }
+    }
+  }
+  //Otherwise make a 2 color gradient
+  else {
+    for (var ii = 0; ii < options.bins.length; ii++) {
+      if (d >= options.bins[ii]) {
+        return interpolateColors(
+          options.highColor,
+          options.lowColor,
+          parseFloat(ii) / (options.bins.length - 1)
+        );
+      }
     }
   }
 
@@ -195,6 +233,7 @@ function getColorModeOptions(mode) {
   } else if (mode == "covid-unemployment-residual") {
     return {
       highColor: "#00DD00",
+      midColor: "#FFFFFF",
       lowColor: "#DD0000",
       bins: [
         "0.20",
@@ -306,16 +345,18 @@ function decrementNum(num) {
     return num - 1;
   } else {
     //Get the number of digits between the . and the last digit
-    // 1.013 dot = 1 length = 5 we want 3
-    let last_place = num_string.length - dot - 2;
+    // 1.013 dot = 1 length = 5 we want 2 leading zeroes to make the number .001
+    // and decrement by that.
+    // 6 =>6 6.4-> 6.3 6.40001> 6.40000
+    let num_leading_zeroes = num_string.length - dot - 2;
 
     let decrement_by = ".";
-    for (var ii = 0; ii < last_place; ii++) {
+    for (var ii = 0; ii < num_leading_zeroes; ii++) {
       decrement_by += "0";
     }
     decrement_by += "1";
 
-    return (num - parseFloat(decrement_by)).toFixed(last_place + 1);
+    return (num - parseFloat(decrement_by)).toFixed(num_leading_zeroes + 1);
   }
 }
 
